@@ -10,27 +10,22 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; // Mutex para sincronização
 
 void* processo_P0(void* arg) {
     for (int i = 0; i < N; ++i) {
-        printf("Iteração P0: %d\n", i);
-        while (1) {
-            pthread_mutex_lock(&mutex);
-            if (vez == 0) {
-                pthread_mutex_unlock(&mutex);
-                break;
-            }
+        printf("P0: iteração %d\n", i);
+        // Seção não crítica P0
+        printf("Processo P0 executando seção não crítica\n");
+
+        pthread_mutex_lock(&mutex);
+        while (vez != 0) {
             pthread_mutex_unlock(&mutex);
+            pthread_mutex_lock(&mutex);
         }
+        vez = 1;
+        pthread_mutex_unlock(&mutex);
 
         // Seção crítica P0
         printf("Processo P0 entrando na seção crítica\n");
         // Simulação de atividades na seção crítica
         printf("Processo P0 saindo da seção crítica\n");
-
-        pthread_mutex_lock(&mutex);
-        vez = 1;
-        pthread_mutex_unlock(&mutex);
-
-        // Seção não crítica P0
-        printf("Processo P0 executando seção não crítica\n");
     }
 
     return NULL;
@@ -38,27 +33,22 @@ void* processo_P0(void* arg) {
 
 void* processo_P1(void* arg) {
     for (int i = 0; i < N; ++i) {
-        printf("Iteração P1: %d\n", i);
-        while (1) {
-            pthread_mutex_lock(&mutex);
-            if (vez == 1) {
-                pthread_mutex_unlock(&mutex);
-                break;
-            }
+        printf("P1: iteração %d\n", i);
+        // Seção não crítica P1
+        printf("Processo P1 executando seção não crítica\n");
+
+        pthread_mutex_lock(&mutex);
+        while (vez != 1) {
             pthread_mutex_unlock(&mutex);
+            pthread_mutex_lock(&mutex);
         }
+        vez = 0;
+        pthread_mutex_unlock(&mutex);
 
         // Seção crítica P1
         printf("Processo P1 entrando na seção crítica\n");
         // Simulação de atividades na seção crítica
         printf("Processo P1 saindo da seção crítica\n");
-
-        pthread_mutex_lock(&mutex);
-        vez = 0;
-        pthread_mutex_unlock(&mutex);
-
-        // Seção não crítica P1
-        printf("Processo P1 executando seção não crítica\n");
     }
 
     return NULL;
