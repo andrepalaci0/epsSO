@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include "error.h"
 
-#define TRUE 1
 #define N 2 // Defina o número de iterações desejado
 
 int vez = 0; // Variável compartilhada
