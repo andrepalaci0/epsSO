@@ -1,37 +1,69 @@
-import threading
+from random import uniform
+from time import sleep
+from threading import Thread, Lock
 
-# Número de filósofos e garfos
-NUM_FILOSOFOS = 5
+plates = [0, 0, 0, 0, 0]  # 0 = Não comeu, 1 Já comeu
 
-# Lista de semáforos para representar os garfos
-garfos = [threading.Semaphore(1) for _ in range(NUM_FILOSOFOS)]
 
-# Função que representa a ação de pensar
-def pensar(filosofo_id):
-    print(f"Filósofo {filosofo_id} está pensando.")
+class Philosopher(Thread):
+    execute = True  #variavel que define se é o momento de comer ou não
 
-# Função que representa a ação de comer
-def comer(filosofo_id):
-    print(f"Filósofo {filosofo_id} está comendo.")
+    def __init__(self, nome, left_hashi, right_hashi):  
+        Thread.__init__(self)
+        self.nome = nome
+        self.left_hashi = left_hashi
+        self.right_hashi = right_hashi
 
-# Função que simula a ação de um filósofo
-def filosofo(filosofo_id):
-    while True:
-        pensar(filosofo_id)
-        garfos[filosofo_id].acquire()  # Pega o garfo da esquerda
-        garfos[(filosofo_id + 1) % NUM_FILOSOFOS].acquire()  # Pega o garfo da direita
-        comer(filosofo_id)
-        garfos[filosofo_id].release()  # Libera o garfo da esquerda
-        garfos[(filosofo_id + 1) % NUM_FILOSOFOS].release()  # Libera o garfo da direita
+    def run(self):
+        while self.execute:
+            print(f"\n {self.nome} está pensando")
+            sleep(uniform(0.5, 1))
+            self.eat()
 
-# Cria uma thread para cada filósofo
-filosofos = [threading.Thread(target=filosofo, args=(i,)) for i in range(NUM_FILOSOFOS)]
+    def eat(self):
+        """
+        Pega o hashi 1 e tenta pegar o hashi 2. Se o hashi 2 estiver livre,
+        o ele janta e solta os dois hashis em seguida,senão ele desiste de
+        comer e continua pensando.
+        """
+        hashi1, hashi2 = self.left_hashi, self.right_hashi
 
-# Inicia as threads
-for filosofo_thread in filosofos:
-    filosofo_thread.start()
+        while self.execute:  # Enquanto a variavel 'execute' for true, tentará pegar os hashis para comer
+            hashi1.acquire(True)  # tenta pegar o primeiro
+            locked = hashi2.acquire(False)  # tenda adquirir o segundo hashi
+            if locked:  #se conseguir (hashi disponivel), sai do loop de tentativa
+                break 
+            hashi1.release()  #se NÃO conseguir, solta o primeiro rashi
+        else:
+            return  #volta a pensar
 
-# Aguarda as threads terminarem
-for filosofo_thread in filosofos:
-    filosofo_thread.join()
+        print(f"\n {self.nome} começou a comer")
+        sleep(uniform(0.5, 1))
+        print(f"\n {self.nome} terminou de comer")
+        plates[names.index(self.nome)] += 1  
+        print(" Quantas vezes cada filósofo comeu: ", plates) # quantidade de vezes que cada filósofo comeu
+        hashi1.release()  # solta o hashi esquerdo
+        hashi2.release()  # solta o hashi direito
 
+
+names = ['Aristóteles', 'Platão', 'Sócrates', 'Pitágoras', 'Demócrito']  
+hashis = [Lock() for _ in range(5)]
+table = [Philosopher(names[i], hashis[i % 5], hashis[(i + 1) % 5]) for i in range(5)]
+count = 0
+print(f"Filósofos à mesa: {names}\n")
+print(f"Estado atual da mesa: {plates}\n")
+for _ in range(20): #O "range" define o total de vezes que cada filósofo ira tentar comer
+    #portanto, o número total de execuções do programa é: range() x 5 (filosofos)
+    Philosopher.execute = True  # Inicia a execução (ato de comer) de um determinado filósofo
+    for philosopher in table: 
+        try:
+            count+= 1
+            philosopher.start()  # inicia a thread respectiva do filósofo
+            sleep(0.5) # aguarda 2 segundos para simular uma sincronização
+        except RuntimeError:  # em caso de error da thread, pula a iteração
+            pass
+    sleep(uniform(0.5, 1))
+    Philosopher.execute = False  # Finaliza a variável de execução do 
+    
+sleep(1)
+print(f"Total de iterações: {count}")
