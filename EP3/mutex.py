@@ -1,35 +1,37 @@
 import threading
 
-# Variável global que simula a seção crítica
-count = 0
+class CriticalSection:
+    def __init__(self):
+        self.mutex = threading.Lock()  # Criando o mutex
 
-# Mutex para garantir a exclusão mútua
-mutex = threading.Semaphore(1)
+        self.shared_variable = 0  # Variável compartilhada
 
-# Função que representa a seção crítica
-def secao_critica():
-    global count
-    count += 1
+    def increment_shared_variable(self):
+        for _ in range(5):
+            self.mutex.acquire()  # Adquirindo o mutex para entrar na seção crítica
+            self.shared_variable += 1  # Operação na variável compartilhada
+            self.mutex.release()  # Liberando o mutex após a operação
 
-# Função executada por cada thread
-def thread_func(thread_id):
-    global count
-    for _ in range(10):
-        mutex.acquire()  # Bloqueia o acesso à seção crítica
-        secao_critica()
-        print(f"Thread {thread_id} entrou na seção crítica. Count = {count}")
-        mutex.release()  # Libera o acesso à seção crítica
+    def run_threads(self):
+        threads = []
+        num_threads = 5
 
-# Cria duas threads
-thread1 = threading.Thread(target=thread_func, args=(1,))
-thread2 = threading.Thread(target=thread_func, args=(2))
+        # Criando threads
+        for _ in range(num_threads):
+            thread = threading.Thread(target=self.increment_shared_variable)
+            threads.append(thread)
 
-# Inicia as threads
-thread1.start()
-thread2.start()
+        # Iniciando as threads
+        for thread in threads:
+            thread.start()
 
-# Aguarda as threads terminarem
-thread1.join()
-thread2.join()
+        # Aguardando as threads finalizarem
+        for thread in threads:
+            thread.join()
 
-print("Ambas as threads terminaram.")
+        # Exibindo o valor final da variável compartilhada
+        print(f"Valor final da variável compartilhada: {self.shared_variable}")
+
+if __name__ == "__main__":
+    cs = CriticalSection()
+    cs.run_threads()
